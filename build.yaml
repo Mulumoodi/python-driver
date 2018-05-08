@@ -4,7 +4,7 @@ schedules:
     branches:
       include: [master, python-697]
     env_vars: |
-      EVENT_LOOP_MANAGER='libev'
+      EVENT_LOOP_MANAGER='asyncore'
       EXCLUDE_LONG=1
     matrix:
       exclude:
