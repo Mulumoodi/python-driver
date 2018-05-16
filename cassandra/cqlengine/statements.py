@@ -617,7 +617,8 @@ class SelectStatement(BaseCQLStatement):
                  limit=None,
                  allow_filtering=False,
                  distinct_fields=None,
-                 fetch_size=None):
+                 fetch_size=None,
+                 is_json=False):
 
         """
         :param where
@@ -635,9 +636,13 @@ class SelectStatement(BaseCQLStatement):
         self.order_by = [order_by] if isinstance(order_by, six.string_types) else order_by
         self.limit = limit
         self.allow_filtering = allow_filtering
+        self.is_json=is_json
 
     def __unicode__(self):
-        qs = ['SELECT']
+        if self.is_json:
+            qs = ['SELECT JSON']
+        else:
+            qs = ['SELECT']
         if self.distinct_fields:
             if self.count:
                 qs += ['DISTINCT COUNT({0})'.format(', '.join(['"{0}"'.format(f) for f in self.distinct_fields]))]

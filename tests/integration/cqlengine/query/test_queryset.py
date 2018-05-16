@@ -1074,6 +1074,9 @@ class TestValuesList(BaseQuerySetUsage):
         item = q.values_list('test_id', 'attempt_id', 'description', 'expected_result', 'test_result').first()
         assert item == [0, 1, 'try2', 10, 30]
 
+        item = q.values_list('test_id', 'attempt_id', 'description', 'expected_result', 'test_result',is_json=True).first()
+        assert item == {0, 1, 'try2', 10, 30}
+
         item = q.values_list('expected_result', flat=True).first()
         assert item == 10
 

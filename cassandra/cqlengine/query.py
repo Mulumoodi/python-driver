@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import copy
+import json
+import ast
 from datetime import datetime, timedelta
 from functools import partial
 import time
@@ -342,6 +344,7 @@ class AbstractQuerySet(object):
     def __init__(self, model):
         super(AbstractQuerySet, self).__init__()
         self.model = model
+        self.is_json=False
 
         # Where clause filters
         self._where = []
@@ -460,7 +463,8 @@ class AbstractQuerySet(object):
             limit=self._limit,
             allow_filtering=self._allow_filtering,
             distinct_fields=self._distinct_fields,
-            fetch_size=self._fetch_size
+            fetch_size=self._fetch_size,
+            is_json=self.is_json
         )
 
     # ----Reads------
@@ -1123,7 +1127,10 @@ class ModelQuerySet(AbstractQuerySet):
             key = self._only_fields[0]
             return lambda row: row[key]
         else:
-            return lambda row: [row[f] for f in self._only_fields]
+            if self.is_json:
+                return lambda row: json.dumps(ast.literal_eval(row['[json]'])) #[row[f] for f in self._only_fields]
+            else:
+                return lambda row: [row[f] for f in self._only_fields]
 
     def _get_ordering_condition(self, colname):
         colname, order_type = super(ModelQuerySet, self)._get_ordering_condition(colname)
@@ -1147,11 +1154,15 @@ class ModelQuerySet(AbstractQuerySet):
     def values_list(self, *fields, **kwargs):
         """ Instructs the query set to return tuples, not model instance """
         flat = kwargs.pop('flat', False)
+        is_json = kwargs.pop('is_json', False)
         if kwargs:
             raise TypeError('Unexpected keyword arguments to values_list: %s'
                             % (kwargs.keys(),))
         if flat and len(fields) > 1:
             raise TypeError("'flat' is not valid when values_list is called with more than one field.")
+
+        if is_json:
+            self.is_json=is_json
         clone = self.only(fields)
         clone._values_list = True
         clone._flat_values_list = flat
